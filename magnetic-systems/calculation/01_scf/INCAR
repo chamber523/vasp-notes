@@ -1,0 +1,79 @@
+# ============================================================
+# INCAR for PdCrO2 Non-collinear Magnetic SCF Calculation
+# Self-consistent field calculation with SOC and DFT+U
+# ============================================================
+
+# ==================== General Parameters ====================
+ALGO = Normal         # Algorithm: Normal = mixture of Davidson and RMM-DIIS
+                      # Good for standard calculations
+PREC = Normal         # Precision: Normal is sufficient for most cases
+EDIFF = 1e-7          # Electronic convergence: 10^-7 eV
+                      # Tight convergence for accurate magnetic moments
+NELM = 500            # Max electronic steps: Allow more iterations for convergence
+ENCUT = 400           # Plane-wave cutoff: 400 eV
+                      # Sufficient for O, Cr, Pd (check POTCAR ENMAX)
+LASPH = True          # Non-spherical contributions from gradient corrections
+                      # Important for DFT+U calculations
+BMIX = 3              # Mixing parameter: Helps convergence for magnetic systems
+AMIN = 0.01           # Minimum mixing: Fine-tune convergence
+ISMEAR = 0            # Smearing method: Gaussian smearing
+SIGMA = 0.05          # Smearing width: 0.05 eV (50 meV)
+                      # Small value for semiconductors/insulators
+
+# ==================== SCF Control ====================
+ISTART = 0            # Start from scratch: Read atomic orbitals
+ICHARG = 2            # Charge initialization: Superposition of atomic charges
+                      # Fresh calculation from POSCAR
+LCHARG = True         # Write CHGCAR: Needed for DOS/band calculations
+LWAVE = True          # Write WAVECAR: Needed for band unfolding
+LREAL = Auto          # Real-space projection: Auto selects optimal method
+                      # Faster for large systems
+
+# ==================== Spin-Orbit Coupling ====================
+LSORBIT = True        # Enable SOC: Essential for non-collinear magnetism
+                      # Treats spin as 3D vector (mx, my, mz)
+MAGMOM = 36*0 \
+    0.250611  0.150583  0.956305 \
+    0.584587  0.351255 -0.731354 \
+   -0.835198 -0.501838 -0.224951 \
+    0.198277  0.191474  0.961262 \
+   -0.697972 -0.674024 -0.241922 \
+    0.499695  0.482550 -0.719340 \
+    0.250611  0.150583  0.956305 \
+    0.584587  0.351255 -0.731354 \
+   -0.835198 -0.501838 -0.224951 \
+    0.198277  0.191474  0.961262 \
+   -0.697972 -0.674024 -0.241922 \
+    0.499695  0.482550 -0.719340 \
+    0.250611  0.150583  0.956305 \
+    0.584587  0.351255 -0.731354 \
+   -0.835198 -0.501838 -0.224951 \
+    0.198277  0.191474  0.961262 \
+   -0.697972 -0.674024 -0.241922 \
+    0.499695  0.482550 -0.719340 \
+    18*0
+# MAGMOM format: 36*0 (O atoms, non-magnetic)
+#                18 Cr magnetic moments (mx my mz for each)
+#                18*0 (Pd atoms, non-magnetic)
+# Values from Takatsu et al., PRB 89, 104408 (2014)
+GGA_COMPAT = .FALSE.  # GGA compatibility: False for newer VASP versions
+
+# ==================== DFT+U Parameters ====================
+LDAU = True           # Enable DFT+U: Corrects self-interaction for d-electrons
+LDAUTYPE = 2          # Dudarev formulation: U_eff = U - J
+                      # Simplified rotationally invariant approach
+LDAUL = -1 2 -1       # Angular momentum for U: -1(O, no U), 2(Cr, d-orbital), -1(Pd, no U)
+LDAUU = 0 4 0         # U values: 0(O), 4.0 eV(Cr), 0(Pd)
+                      # U=4.0 eV is typical for Cr 3d states
+LDAUJ = 0 0.9 0       # J values: Always 0 for Dudarev method
+                      # J parameter not used in LDAUTYPE=2
+LMAXMIX = 6           # Max l for charge mixing: 6 includes f-orbitals
+                      # Necessary for proper convergence with SOC
+
+# ==================== Parallelization ====================
+# Adjust these based on your computing resources
+NPAR = 32             # Number of bands treated in parallel
+KPAR = 2              # K-point parallelization
+NCORE = 8             # Number of cores per orbital
+# Total cores = NPAR × KPAR × NCORE / some factor
+# Example: For 64 cores, use NPAR=32, KPAR=2

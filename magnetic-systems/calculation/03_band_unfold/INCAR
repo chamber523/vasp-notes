@@ -1,0 +1,89 @@
+# ============================================================
+# INCAR for PdCrO2 Band Structure (Unfolding Preparation)
+# Non-self-consistent band structure along high-symmetry path
+# ============================================================
+
+# ==================== General Parameters ====================
+ALGO = Normal         # Algorithm: Same as SCF
+PREC = Normal         # Precision: Normal
+EDIFF = 1e-7          # Electronic convergence
+NELM = 500            # Max electronic steps
+ENCUT = 400           # Plane-wave cutoff: Must match SCF
+LASPH = True          # Non-spherical contributions
+BMIX = 3              # Mixing parameter
+AMIN = 0.01           # Minimum mixing
+ISMEAR = 0            # Gaussian smearing for band structure
+                      # ISMEAR=-5 not recommended for non-uniform k-paths
+SIGMA = 0.05          # Smearing width
+
+# ==================== Band Structure Specific ====================
+ICHARG = 11           # Read charge density from CHGCAR
+                      # Non-self-consistent eigenvalue calculation
+LCHARG = False        # Do not write CHGCAR
+LWAVE = True          # IMPORTANT: Write WAVECAR for band unfolding
+                      # Required for easyunfold or BandUP tools
+LORBIT = 11           # Orbital-projected band characters
+                      # Useful for fat band analysis
+LREAL = Auto          # Real-space projection
+
+# ==================== Spin-Orbit Coupling ====================
+LSORBIT = True        # Enable SOC: Must match SCF
+MAGMOM = 36*0 \
+    0.250611  0.150583  0.956305 \
+    0.584587  0.351255 -0.731354 \
+   -0.835198 -0.501838 -0.224951 \
+    0.198277  0.191474  0.961262 \
+   -0.697972 -0.674024 -0.241922 \
+    0.499695  0.482550 -0.719340 \
+    0.250611  0.150583  0.956305 \
+    0.584587  0.351255 -0.731354 \
+   -0.835198 -0.501838 -0.224951 \
+    0.198277  0.191474  0.961262 \
+   -0.697972 -0.674024 -0.241922 \
+    0.499695  0.482550 -0.719340 \
+    0.250611  0.150583  0.956305 \
+    0.584587  0.351255 -0.731354 \
+   -0.835198 -0.501838 -0.224951 \
+    0.198277  0.191474  0.961262 \
+   -0.697972 -0.674024 -0.241922 \
+    0.499695  0.482550 -0.719340 \
+    18*0
+# Same MAGMOM as SCF
+GGA_COMPAT = .FALSE.
+
+# ==================== DFT+U Parameters ====================
+LDAU = True           # Enable DFT+U: Must match SCF
+LDAUTYPE = 2          # Dudarev formulation
+LDAUL = -1 2 -1       # U on Cr d-orbitals
+LDAUU = 0 4 0         # U = 4.0 eV for Cr
+LDAUJ = 0 0.9 0       # J = 0 for Dudarev
+LMAXMIX = 6           # Max l for mixing
+
+# ==================== Parallelization ====================
+NPAR = 32             # Adjust based on resources
+KPAR = 2              # K-point parallelization
+NCORE = 8             # Cores per orbital
+
+# ==================== Notes ====================
+# Prerequisites:
+#   1. Converged SCF calculation in ../01_scf/
+#   2. Copy CHGCAR from ../01_scf/
+#   3. Special KPOINTS with high-symmetry path
+#
+# Band Unfolding Workflow:
+#   1. Run this VASP calculation → get WAVECAR
+#   2. Use easyunfold or BandUP to unfold bands
+#   3. Map supercell bands to primitive cell Brillouin zone
+#
+# High-symmetry path for hexagonal system (primitive cell):
+#   Γ → K → M → Γ
+#   Or: Γ → M → K → Γ
+#
+# For supercell unfolding:
+#   - Need transformation matrix (same as structure generation)
+#   - Use easyunfold: easyunfold unfold --matrix "[[2,1,0],[1,2,0],[0,0,2]]"
+#
+# Output files:
+#   - WAVECAR: Wave functions for unfolding (large file!)
+#   - EIGENVAL: Eigenvalues along k-path
+#   - PROCAR: Orbital projections (for fat bands)

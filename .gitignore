@@ -1,0 +1,82 @@
+# VASP sensitive files (NEVER commit due to license restrictions)
+POTCAR
+**/POTCAR
+
+# VASP output files
+OUTCAR
+OSZICAR
+CONTCAR
+CHGCAR
+CHG
+WAVECAR
+EIGENVAL
+DOSCAR
+PROCAR
+IBZKPT
+PCDAT
+XDATCAR
+vasprun.xml
+REPORT
+**/OUTCAR
+**/OSZICAR
+**/CONTCAR
+**/CHGCAR
+**/CHG
+**/WAVECAR
+**/EIGENVAL
+**/DOSCAR
+**/PROCAR
+**/IBZKPT
+**/PCDAT
+**/XDATCAR
+**/vasprun.xml
+**/REPORT
+
+# Job submission files
+*.out
+*.err
+slurm-*.out
+vasp_*.out
+vasp_*.err
+
+# Backup files
+*.bak
+*~
+*.swp
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Large data files
+*.tar
+*.tar.gz
+*.zip
+*.hdf5
+*.h5
+PdCrO2_Doping_Magnetic_calculation/

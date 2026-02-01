@@ -1,0 +1,19 @@
+K-Points for DOS Calculation
+0                    # 0 = auto-generate k-points
+Monkhorst-Pack       # Monkhorst-Pack grid
+  12 12  1           # k-point mesh: 12×12×1 (denser than SCF)
+0.0  0.0  0.0        # No shift
+
+# Dense K-point Mesh for DOS:
+# - 12×12×1: Denser than SCF (8×8×1) for accurate DOS
+# - Required for ISMEAR=-5 (tetrahedron method)
+# - Ensures smooth DOS curves without artifacts
+#
+# Why denser mesh?
+#   - Tetrahedron method needs many k-points
+#   - Captures fine details near Fermi level
+#   - Better band gap estimation
+#
+# Alternatives:
+#   - 14×14×1 or 16×16×1 for publication-quality DOS
+#   - Test convergence by comparing DOSCAR
