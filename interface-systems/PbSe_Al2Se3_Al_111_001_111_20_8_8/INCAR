@@ -1,0 +1,43 @@
+# general 
+ALGO = Fast       # Fast algorithm to reduce memory usage
+PREC = Normal   # Normal precision
+EDIFF = 1e-5    # Convergence criteria for electronic converge
+NELM = 500      # Max number of electronic steps
+ENCUT = 400     # Cut off energy
+LASPH = True    # Include non-spherical contributions from gradient corrections
+BMIX = 3        # Mixing parameter for convergence
+AMIN = 0.01     # Mixing parameter for convergence 
+SIGMA = 0.05    # Width of smearing in eV
+ISMEAR = 0
+
+# scf 
+ISTART = 0
+ICHARG = 2      # Generate CHG* from a superposition of atomic charge densities
+LCHARG = False   # Do not write CHG* files to save memory
+LWAVE = False    # Does not write the WAVECAR
+LREAL = Auto    # Automatically chooses real/reciprocal space for projections
+
+# Memory optimization
+LOPTICS = .FALSE.  # Disable optical properties calculation
+LPEAD = .FALSE.    # Disable finite differences
+LVEL = .FALSE.     # Disable velocity output
+LCHIMAG = .FALSE.  # Disable magnetic susceptibility
+NSW = 1           # Single point calculation
+IBRION = -1       # No ionic relaxation
+
+# soc     
+LSORBIT = True  # Turn on spin-orbit coupling
+MAGMOM = 1944*0.0
+GGA_COMPAT = .FALSE.
+
+#vdw
+IVDW = 20           # T-S
+LVDW_EWALD = True   # Use Ewald's Summation (edited)
+
+# slab 
+IDIPOL = 3      # Calculates the dipole along the z-axis
+LREAL = Auto    # Automatically chooses rea/reciprocal space for projections
+DIPOL = 0.51925 0.49223 0.42848   # Defining the location of the center of the dipole moment (center of mass)
+LDIPOL = True   # Adding dipole corrections
+ 
+LVHAR = .TRUE.
