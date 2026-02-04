@@ -89,5 +89,3 @@ LDAUU = 0 4 0          # U = 4.0 eV for Cr
 ## References
 
 - Takatsu et al., PRB 89, 104408 (2014): Magnetic structure
-- [VASP Wiki: Non-collinear calculations](https://www.vasp.at/wiki/index.php/Non-collinear_calculations)
-- [vaspvis](https://github.com/DerekDardzinski/vaspvis): Band structure and DOS visualization
