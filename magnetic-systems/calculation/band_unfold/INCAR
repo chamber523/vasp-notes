@@ -1,0 +1,55 @@
+# general 
+ALGO = Normal     # Mixture of Davidson and RMM-DIIS algos
+PREC = Normal   # Normal precision
+EDIFF = 1e-7    # Convergence criteria for electronic converge
+NELM = 500      # Max number of electronic steps
+ENCUT = 400     # Cut off energy
+LASPH = True    # Include non-spherical contributions from gradient corrections
+BMIX = 3        # Mixing parameter for convergence
+AMIN = 0.01     # Mixing parameter for convergence 
+ISMEAR = 0      # Fermi smearing
+SIGMA = 0.05    # Width of smearing in eV
+
+# band 
+ICHARG = 11     # Calculate eigenvalues from preconverged CHGCAR
+ISMEAR = 0      # Fermi smearing
+LCHARG = False  # Does not write the CHG* files
+LWAVE = True   # Does not write the WAVECAR files (True for unfolding)
+LORBIT = 11     # Projected data (lm-decomposed PROCAR)
+
+# soc     
+LSORBIT = True  # Turn on spin-orbit coupling
+MAGMOM = 108*0.0 \
+0.584587 0.351255 -0.731354 \
+-0.697972 -0.674024 -0.241922 \
+0.250611 0.150583 0.956305 \
+0.198277 0.191474 0.961262 \
+-0.835198 -0.501838 -0.224951 \
+0.499695 0.482550 -0.719340 \
+0.499695 0.482550 -0.719340 \
+-0.835198 -0.501838 -0.224951 \
+0.198277 0.191474 0.961262 \
+0.250611 0.150583 0.956305 \
+-0.697972 -0.674024 -0.241922 \
+0.584587 0.351255 -0.731354 \
+0.250611 0.150583 0.956305 \
+0.198277 0.191474 0.961262 \
+0.584587 0.351255 -0.731354 \
+-0.697972 -0.674024 -0.241922 \
+-0.835198 -0.501838 -0.224951 \
+0.499695 0.482550 -0.719340 \
+54*0.0
+GGA_COMPAT = .FALSE.
+
+# dftu 
+LDAU = True     # Determines if DFT+U is used
+LDAUTYPE = 2    # Dudarev formulation
+LDAUL = -1 2 -1   # l-quantum number to apply the U-value on (-1 turns it off)
+LDAUU = 0 4 0   # Effective U-value for each species
+LDAUJ = 0 0.9 0   # J-value (Always zero for Dudarev method)
+LMAXMIX = 6     # Max l-quantum number for charge density mixing
+
+# para
+NPAR = 32
+KPAR = 2
+NCORE = 8
