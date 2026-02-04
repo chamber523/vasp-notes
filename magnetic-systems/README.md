@@ -83,11 +83,11 @@ LDAUU = 0 4 0          # U = 4.0 eV for Cr
 ### Band Unfolding
 
 - Transformation matrix: `[[2,1,0],[1,2,0],[0,0,2]]`
-- Tool: easyunfold or BandUP
+- Visualization: vaspvis
 - Requirement: `LWAVE = True` in band_unfold/INCAR
 
 ## References
 
 - Takatsu et al., PRB 89, 104408 (2014): Magnetic structure
 - [VASP Wiki: Non-collinear calculations](https://www.vasp.at/wiki/index.php/Non-collinear_calculations)
-- [easyunfold](https://github.com/SMTG-UCL/easyunfold): Band unfolding tool
+- [vaspvis](https://github.com/DerekDardzinski/vaspvis): Band structure and DOS visualization
