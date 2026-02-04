@@ -1,493 +1,360 @@
-# 磁性体系计算工作流
+# Magnetic Systems: Non-collinear DFT Workflow
 
-以 PdCrO2 钒掺杂磁性计算为例，展示 VASP 非共线磁性计算的完整工作流程。
+Complete workflow for VASP non-collinear magnetic calculations, using PdCrO₂ delafossite as a reference system.
 
-## 📖 目录结构
+## Overview
+
+This directory contains a production-ready workflow for calculating magnetic systems with:
+- **Non-collinear magnetism** with spin-orbit coupling (SOC)
+- **Complex magnetic structures** (18-sublattice ordering)
+- **DFT+U corrections** for strongly correlated electrons
+- **Band structure unfolding** for supercell calculations
+
+**Reference system:** PdCrO₂ with 6-layer magnetic structure (Takatsu et al., PRB 89, 104408, 2014)
+
+## Directory Structure
 
 ```
 magnetic-systems/
-├── README.md                    # 本文档 - 完整工作流说明
-├── model/                       # 磁性模型与结构
-│   ├── magnetic_structure.md    # 磁性结构理论与建模
-│   ├── sqs_generation.md        # SQS 结构生成方法
-│   └── examples/                # 示例结构文件
-└── calculation/                 # 计算设置与分析
-    ├── noncollinear_setup.md    # 非共线磁性计算设置
-    ├── dftu_parameters.md       # DFT+U 参数选择
-    ├── convergence_tips.md      # 收敛技巧
-    └── analysis_scripts/        # 分析脚本
+├── README.md                      # This file - workflow overview
+├── noncollinear-magnetism.md     # Theory and practical guide
+├── band-unfolding.md             # Supercell band unfolding guide
+├── model/                        # Structure preparation
+│   ├── shift_z.py                 # Reorient cell (Cr to bottom)
+│   ├── make_supercell.py          # Generate magnetic supercell
+│   ├── generate_magmom.py         # Calculate initial magnetic moments
+│   ├── generate_mcif.py           # VESTA visualization (mcif format)
+│   ├── 01_POSCAR_unitcell         # Primitive cell
+│   ├── 02_POSCAR_Cr-bottom        # Cr-terminated cell
+│   ├── 03_POSCAR_supercell_6x     # 2×2×2 magnetic supercell
+│   ├── MAGMOM.txt                 # Magnetic moment vectors
+│   └── magnetic_structure.mcif    # VESTA visualization file
+└── calculation/                  # DFT calculations
+    ├── 01_scf/                    # Self-consistent field
+    │   ├── INCAR                   # 103 lines with detailed comments
+    │   └── KPOINTS                 # 8×8×1 mesh
+    ├── 02_dos/                    # Density of states
+    │   ├── INCAR                   # DOS-specific settings
+    │   └── KPOINTS                 # 12×12×1 denser mesh
+    ├── 03_band_unfold/            # Band structure + unfolding
+    │   ├── INCAR                   # LWAVE=True for unfolding
+    │   └── KPOINTS                 # Γ-M-K-Γ high-symmetry path
+    ├── README.md                   # Detailed calculation guide
+    ├── QUICK_START.md              # 5-minute setup guide
+    ├── FILE_SUMMARY.md             # File descriptions
+    ├── POTCAR_README.txt           # POTCAR generation
+    ├── check_setup.sh              # Pre-flight validation script
+    └── submit_template.slurm       # Job submission template
 ```
 
-## 🎯 项目背景：PdCrO2 钒掺杂
+## Workflow Overview
 
-**研究目标：** 研究钒掺杂对 PdCrO2 磁性三角晶格材料磁学性质的影响
+### Phase 1: Structure Preparation (`model/`)
 
-**挑战：**
-- 复杂的 6 层磁性结构（18 个子晶格）
-- 非共线磁矩（3D 磁矩向量）
-- 自旋轨道耦合（SOC）效应
-- 强关联电子（需要 DFT+U 修正）
-
-## 🔄 完整工作流程
-
-### 步骤 1：结构准备
-
-#### 1.1 获取基础结构
+**Goal:** Transform primitive cell → magnetic supercell with proper termination
 
 ```bash
-# 从 Materials Project 或实验数据获取 PdCrO2 晶体结构
-# 或使用 VESTA/Pymatgen 构建
+cd model/
+
+# Step 1: Reorient cell (Cr layer to bottom)
+python shift_z.py 01_POSCAR_unitcell 02_POSCAR_Cr-bottom
+
+# Step 2: Generate supercell with transformation matrix
+python make_supercell.py 02_POSCAR_Cr-bottom 03_POSCAR_supercell_6x
+
+# Step 3: Generate magnetic moments from Takatsu model
+python generate_magmom.py
+
+# Step 4: Generate VESTA visualization
+python generate_mcif.py 03_POSCAR_supercell_6x
 ```
 
-#### 1.2 创建掺杂结构（SQS 方法）
+**Key output:** `03_POSCAR_supercell_6x` (72 atoms: 36 O, 18 Cr, 18 Pd)
 
-使用 ICET 生成特殊准随机结构（Special Quasirandom Structure）：
-
+**Transformation matrix:**
 ```python
-# 参考：sqs_generation/icet.ipynb
-from icet import ClusterSpace, StructureContainer
-from ase.io import read
-
-# 读取原始结构
-prim = read('POSCAR')
-
-# 定义掺杂配置
-# Cr -> V 掺杂，浓度 30%, 60%, 90%
+[[2, 1, 0],
+ [1, 2, 0],
+ [0, 0, 2]]
 ```
 
-**输出文件：**
-- `POSCAR_SQS_V30.vasp` - 30% V 掺杂
-- `POSCAR_SQS_V60.vasp` - 60% V 掺杂
-- `POSCAR_SQS_V90.vasp` - 90% V 掺杂
+### Phase 2: DFT Calculations (`calculation/`)
 
-详细说明见：[model/sqs_generation.md](model/sqs_generation.md)
+**Goal:** SCF → DOS → Band structure with full documentation
 
----
-
-### 步骤 2：磁性结构设计
-
-#### 2.1 确定磁性配置
-
-基于 **Takatsu et al. (2014)** 实验结果，PdCrO2 具有：
-- **6 层反铁磁结构**
-- **120° 磁矩旋转** (三角晶格特征)
-- **非共线磁序**
-
-#### 2.2 计算初始磁矩
-
-使用 Python 脚本根据磁性模型计算每个原子的初始磁矩：
-
-```python
-# 参考：magnetic_analysis/magmom.ipynb
-# 输出：3D 磁矩向量 (mx, my, mz)
-
-# 示例输出：
-# Cr atom 1: mx=0.584587, my=0.351255, mz=-0.731354
-# Cr atom 2: mx=-0.697972, my=-0.674024, mz=-0.241922
-```
-
-**关键参数：**
-- `α_n`: 层内旋转角
-- `φ_n`: 层间相位差
-- `γ_n`: 倾斜角
-- `ξ_n`: 磁矩大小
-
-详细说明见：[model/magnetic_structure.md](model/magnetic_structure.md)
-
----
-
-### 步骤 3：DFT 计算设置
-
-#### 3.1 自洽场（SCF）计算
-
-**INCAR 关键设置：**
+#### 2.1 Self-Consistent Field (SCF)
 
 ```bash
-# ========== 基本精度 ==========
-ALGO = Normal
-PREC = Normal
-EDIFF = 1e-6          # 收敛判据
-ENCUT = 400           # 截断能
-NELM = 500            # 最大电子步数
+cd calculation/01_scf/
+cp ../../model/03_POSCAR_supercell_6x POSCAR
 
-# ========== 电荷密度 ==========
-ISTART = 0            # 从头开始
-ICHARG = 2            # 叠加原子电荷
-LCHARG = True         # 输出 CHGCAR
-LWAVE = True          # 输出 WAVECAR
+# Generate POTCAR (O, Cr_pv, Pd order)
+cat $VASP_PP_PATH/potpaw_PBE/O/POTCAR \
+    $VASP_PP_PATH/potpaw_PBE/Cr_pv/POTCAR \
+    $VASP_PP_PATH/potpaw_PBE/Pd/POTCAR > POTCAR
 
-# ========== 非共线磁性 + SOC ==========
-LSORBIT = True        # 开启自旋轨道耦合
-LNONCOLLINEAR = True  # 非共线磁性（自动开启）
+# Validate setup
+../check_setup.sh
 
-# 初始磁矩（3D 向量）
-MAGMOM = 108*0.0 \      # 108 个 Pd 原子（非磁性）
-  0.584587  0.351255 -0.731354 \   # Cr1: 120° 旋转
- -0.697972 -0.674024 -0.241922 \   # Cr2
-  0.250611  0.150583  0.956305 \   # Cr3
-  ... (共 18 个 Cr 磁性原子)
-  54*0.0                # 54 个 O 原子（非磁性）
-
-GGA_COMPAT = .FALSE.  # 兼容性设置
-
-# ========== DFT+U 修正 ==========
-LDAU = True           # 启用 DFT+U
-LDAUTYPE = 2          # Dudarev 形式
-LDAUL = -1 2 2 -1     # Pd=off, Cr=d, V=d, O=off
-LDAUU = 0 3 4 0       # U: Cr=3eV, V=4eV
-LDAUJ = 0 0 0.9 0     # J 值（Dudarev 中不使用）
-LMAXMIX = 6           # 混合参数
-
-# ========== 收敛加速 ==========
-BMIX = 3              # 混合参数
-AMIN = 0.01           # 最小混合参数
-NELMDL = -5           # 跳过前 5 步对角化
-ISMEAR = 0            # Gaussian smearing
-SIGMA = 0.05          # 展宽宽度
-
-# ========== 并行化（Perlmutter） ==========
-NPAR = 32             # 并行组数
-KPAR = 2              # k-point 并行
-NCORE = 8             # 每组核心数
+# Submit job
+sbatch ../submit_template.slurm
 ```
 
-**KPOINTS：**
+**Key INCAR parameters:**
+```bash
+LSORBIT = True        # Enable SOC (auto-enables non-collinear)
+MAGMOM = 36*0 \       # O: non-magnetic
+    0.250611  0.150583  0.956305 \  # Cr1: 3D moment vector
+    [... 18 Cr magnetic moments ...]
+    18*0              # Pd: non-magnetic
+
+LDAU = True           # DFT+U correction
+LDAUU = 0 4 0         # U = 4.0 eV for Cr only
+```
+
+#### 2.2 Density of States (DOS)
 
 ```bash
-Automatic
-0
-Gamma
-4 4 2    # 根据体系调整
+cd calculation/02_dos/
+cp ../01_scf/{POSCAR,POTCAR,CHGCAR} .
+
+# INCAR differences from SCF:
+# ICHARG = 11    (read CHGCAR, non-self-consistent)
+# ISMEAR = -5    (tetrahedron method)
+# LORBIT = 11    (orbital-projected DOS)
+# NEDOS = 3001   (high resolution)
 ```
 
-**提交作业：**
+#### 2.3 Band Structure + Unfolding
 
 ```bash
-sbatch submit_vasp.slurm
+cd calculation/03_band_unfold/
+cp ../01_scf/{POSCAR,POTCAR,CHGCAR} .
+
+# CRITICAL: LWAVE = True (required for band unfolding)
+sbatch ../submit_template.slurm
+
+# After convergence, unfold bands
+easyunfold unfold calculate --matrix "[[2,1,0],[1,2,0],[0,0,2]]"
 ```
 
-详细说明见：[calculation/noncollinear_setup.md](calculation/noncollinear_setup.md)
+## Key Features
 
----
+### 1. Comprehensive Documentation
 
-#### 3.2 态密度（DOS）计算
+Every file is thoroughly documented:
+- **INCAR files:** 100+ lines with line-by-line parameter explanations
+- **KPOINTS files:** Rationale for mesh density, convergence notes
+- **Scripts:** Detailed docstrings and usage examples
+- **Guides:** README.md (detailed), QUICK_START.md (5 min), FILE_SUMMARY.md (reference)
 
-SCF 收敛后计算态密度：
+### 2. Non-collinear Magnetism Setup
+
+**18-sublattice magnetic structure:**
+- 6 Cr layers (z-direction)
+- 3 sublattices per layer (A, B, C in triangular lattice)
+- Each Cr atom has unique 3D magnetic moment vector
+
+**MAGMOM format:**
+```bash
+MAGMOM = mx1 my1 mz1  mx2 my2 mz2  ...  (3 components per atom)
+```
+
+**Computed from Takatsu Model 4:**
+- Layer-dependent tilt angles α_n
+- In-plane rotation angles φ_n
+- Magnetic moment magnitudes ξ_n
+
+### 3. DFT+U for Cr 3d Electrons
 
 ```bash
-# INCAR 修改
-ISTART = 1            # 读取 WAVECAR
-ICHARG = 11           # 读取 CHGCAR
-LORBIT = 11           # 输出投影 DOS
-NSW = 0               # 静态计算
-IBRION = -1
-
-# 增加 k-point 密度
-# KPOINTS: 8 8 4
+LDAU = True
+LDAUTYPE = 2          # Dudarev formulation
+LDAUL = -1 2 -1       # O=off, Cr=d, Pd=off
+LDAUU = 0 4 0         # U = 4.0 eV for Cr
+LMAXMIX = 4           # Mix d orbitals
 ```
 
----
+**U value source:** Literature for Cr oxides (3-4 eV range)
 
-#### 3.3 能带结构计算
+### 4. Band Unfolding for Supercells
+
+**Problem:** Supercell band structure is folded and messy
+
+**Solution:** Unfold to primitive cell Brillouin zone
+
+**Tools:** easyunfold or BandUP
+
+**Requirements:**
+- LWAVE = True in INCAR (writes WAVECAR)
+- Transformation matrix from supercell construction
+- High-symmetry k-path in primitive BZ (Γ-M-K-Γ)
+
+### 5. Validation & Quality Control
+
+**Pre-run checks (`check_setup.sh`):**
+- File existence (INCAR, POSCAR, POTCAR, KPOINTS)
+- POSCAR atom count consistency
+- POTCAR element order matches POSCAR
+- MAGMOM count validation
+- INCAR parameter sanity checks
+
+**Post-run analysis (`submit_template.slurm`):**
+- Convergence detection
+- Final energy extraction
+- Magnetic moment summary
+- Warning/error scanning
+
+## Usage Scenarios
+
+### For New Users
+
+1. Read `calculation/QUICK_START.md` (5 minutes)
+2. Run validation: `cd calculation/01_scf && ../check_setup.sh`
+3. Submit first job: `sbatch ../submit_template.slurm`
+4. Refer to `calculation/README.md` for troubleshooting
+
+### For Experienced Users
+
+1. Copy POSCAR, generate POTCAR
+2. Quick validate with `check_setup.sh`
+3. Customize parallelization (NPAR, KPAR, NCORE)
+4. Submit with optimized resources
+
+### For Similar Systems
+
+**To adapt this workflow for other magnetic materials:**
+
+1. **Structure preparation:**
+   - Replace primitive POSCAR
+   - Adjust supercell transformation matrix in `make_supercell.py`
+
+2. **Magnetic structure:**
+   - Modify `generate_magmom.py` for your magnetic model
+   - Update layer count, sublattice count, spin directions
+
+3. **DFT+U values:**
+   - Update LDAUU in INCAR based on literature
+   - Consider different U values for different magnetic elements
+
+4. **K-point mesh:**
+   - Adjust based on supercell size
+   - Denser for smaller cells, sparser for larger
+
+## Technical Details
+
+### Computational Requirements
+
+**For 72-atom PdCrO₂ supercell:**
+
+| Calculation | Cores | Time    | Memory | Key Files         |
+|-------------|-------|---------|--------|-------------------|
+| SCF         | 64    | 2-6 hrs | ~20 GB | CHGCAR (for DOS)  |
+| DOS         | 64    | 1-3 hrs | ~15 GB | DOSCAR, PROCAR    |
+| Band        | 64    | 1-2 hrs | ~15 GB | WAVECAR (>1 GB)   |
+
+**Parallelization (INCAR):**
+```bash
+NPAR = 8              # Parallel bands
+KPAR = 2              # Parallel k-points
+NCORE = 4             # Cores per band
+```
+
+### Convergence Parameters
 
 ```bash
-# 生成高对称点路径
-# 对于三角晶格：Γ-M-K-Γ-A-L-H-A
-
-ISTART = 1
-ICHARG = 11
-LORBIT = 11
-LWAVE = False
+ENCUT = 400           # Plane-wave cutoff (eV)
+EDIFF = 1e-7          # Electronic convergence (eV)
+ALGO = Normal         # Davidson + RMM-DIIS
+NELM = 200            # Max electronic steps
 ```
 
-详细说明见：[calculation/dftu_parameters.md](calculation/dftu_parameters.md)
+### K-point Convergence
 
----
+| Calculation | Mesh    | Total k-pts | Purpose              |
+|-------------|---------|-------------|----------------------|
+| SCF         | 8×8×1   | 64          | Total energy         |
+| DOS         | 12×12×1 | 144         | Smooth DOS curves    |
+| Band        | 40/seg  | ~120        | High-symmetry path   |
 
-### 步骤 4：计算监控与收敛检查
+**Rationale:**
+- Dense in ab-plane (5.07 Å lattice)
+- Sparse along c-axis (36.24 Å supercell)
 
-#### 4.1 监控作业状态
+## Related Topics
+
+- **[noncollinear-magnetism.md](noncollinear-magnetism.md)** - Theory, MAGMOM format, troubleshooting
+- **[band-unfolding.md](band-unfolding.md)** - Detailed unfolding guide with easyunfold examples
+
+## References
+
+1. **Takatsu et al., Phys. Rev. B 89, 104408 (2014)**
+   - Experimental magnetic structure determination
+   - Model 4 parameters used in this workflow
+
+2. **VASP Wiki:**
+   - [Non-collinear calculations](https://www.vasp.at/wiki/index.php/Non-collinear_calculations)
+   - [LSORBIT](https://www.vasp.at/wiki/index.php/LSORBIT)
+   - [DFT+U](https://www.vasp.at/wiki/index.php/LDAU)
+
+3. **easyunfold:**
+   - [GitHub Repository](https://github.com/SMTG-UCL/easyunfold)
+   - [Documentation](https://smtg-ucl.github.io/easyunfold/)
+
+## Troubleshooting
+
+### Common Issues
+
+**1. Magnetic moments collapse to zero**
+- Check MAGMOM order matches POSCAR atom sequence
+- Increase initial magnetic moment magnitudes
+- Try ISYM = 0 to break symmetry
+
+**2. SCF not converging**
+- Increase NELM (200 → 500)
+- Try ALGO = All or ALGO = VeryFast
+- Adjust mixing: BMIX, AMIX
+
+**3. POTCAR errors**
+- Verify element order: `grep TITEL POTCAR`
+- Must match POSCAR line 6: O Cr Pd
+- Use Cr_pv (not Cr) for better semicore description
+
+**4. Band unfolding fails**
+- Ensure LWAVE = True in INCAR
+- Check transformation matrix matches supercell construction
+- Verify WAVECAR file exists and is not corrupted
+
+### Quick Diagnostics
 
 ```bash
-# 查看队列
-squeue -u $USER
+# Check convergence
+grep "reached required accuracy" OUTCAR
 
-# 查看 OSZICAR（收敛情况）
-tail -f OSZICAR
+# View final energy
+grep "E0=" OSZICAR | tail -1
 
-# 检查磁矩演化
-grep "magnetization (x)" OSZICAR
+# Check magnetic moments
+grep "magnetization (x,y,z)" OUTCAR | head -50
+
+# Verify file sizes
+ls -lh CHGCAR WAVECAR
 ```
 
-#### 4.2 收敛判据
+## Contributing
 
-- **能量收敛：** `ΔE < 1e-6 eV`
-- **磁矩稳定：** 磁矩在最后几步变化 < 0.01 μB
-- **力收敛：** （如果做结构优化）`F < 0.01 eV/Å`
+To improve this workflow:
+1. Test on different magnetic systems
+2. Document parameter optimization strategies
+3. Add analysis scripts for magnetic structure
+4. Expand troubleshooting guide with new issues
 
-**常见问题与解决：**
+## License
 
-| 问题 | 原因 | 解决方法 |
-|------|------|----------|
-| 磁矩振荡 | 初始磁矩不合理 | 调整 MAGMOM，增大 BMIX |
-| 不收敛 | 电荷密度混合问题 | 减小 BMIX，使用 ALGO = All |
-| 磁矩归零 | 对称性破缺不够 | ISYM = 0，增大初始磁矩 |
-
-详细说明见：[calculation/convergence_tips.md](calculation/convergence_tips.md)
+MIT License - Free to use and modify
 
 ---
 
-### 步骤 5：结果分析
-
-#### 5.1 提取磁性性质
-
-```bash
-# 总磁矩
-grep "number of electron" OUTCAR | tail -1
-
-# 每个原子磁矩
-grep "magnetization (x)" OUTCAR -A [原子数+4]
-```
-
-**使用 Python 分析：**
-
-```python
-from pymatgen.io.vasp import Outcar
-
-# 读取 OUTCAR
-outcar = Outcar("OUTCAR")
-
-# 获取磁矩
-magnetization = outcar.magnetization
-print(f"Total magnetic moment: {sum(magnetization):.3f} μB")
-
-# 绘制磁矩分布
-import matplotlib.pyplot as plt
-import numpy as np
-
-mag_magnitudes = [np.linalg.norm(m) for m in magnetization]
-plt.bar(range(len(mag_magnitudes)), mag_magnitudes)
-plt.xlabel('Atom Index')
-plt.ylabel('Magnetic Moment (μB)')
-plt.title('Magnetic Moment Distribution')
-plt.show()
-```
-
-#### 5.2 VESTA 可视化
-
-将磁性结构导出为 MCIF 格式在 VESTA 中可视化：
-
-```python
-# 生成 vesta.mcif 文件
-# 可以在 VESTA 中查看 3D 磁矩箭头
-```
-
-#### 5.3 态密度分析
-
-```python
-from pymatgen.io.vasp import Vasprun
-from pymatgen.electronic_structure.plotter import DosPlotter
-
-vasprun = Vasprun("vasprun.xml")
-dos = vasprun.complete_dos
-
-# 绘制总 DOS
-plotter = DosPlotter()
-plotter.add_dos("Total", dos)
-plotter.show()
-
-# 分自旋 DOS
-dos_up = dos.densities[Spin.up]
-dos_down = dos.densities[Spin.down]
-```
-
----
-
-## 📊 完整计算流程图
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  1. 结构准备                                                  │
-│     • 基础晶体结构（Materials Project / 实验）                │
-│     • SQS 掺杂结构生成（ICET）                                │
-└────────────────┬────────────────────────────────────────────┘
-                 │
-                 ▼
-┌─────────────────────────────────────────────────────────────┐
-│  2. 磁性模型设计                                              │
-│     • 确定磁性配置（6 层，18 子晶格）                         │
-│     • 计算初始 3D 磁矩（基于 Takatsu Model 4）                │
-│     • 生成 MAGMOM 参数                                        │
-└────────────────┬────────────────────────────────────────────┘
-                 │
-                 ▼
-┌─────────────────────────────────────────────────────────────┐
-│  3. SCF 计算（Non-collinear + SOC + DFT+U）                   │
-│     • LSORBIT = True                                          │
-│     • MAGMOM = 3D 向量                                        │
-│     • LDAU: Cr(U=3), V(U=4)                                   │
-│     • 收敛判据：1e-6 eV                                        │
-└────────────────┬────────────────────────────────────────────┘
-                 │
-                 ▼
-┌─────────────────────────────────────────────────────────────┐
-│  4. 后处理计算                                                │
-│     • DOS 计算（LORBIT=11）                                   │
-│     • Band 计算（高对称点路径）                               │
-│     • 电荷密度分析（CHGCAR）                                  │
-└────────────────┬────────────────────────────────────────────┘
-                 │
-                 ▼
-┌─────────────────────────────────────────────────────────────┐
-│  5. 结果分析与可视化                                          │
-│     • 磁矩提取与分析（pymatgen）                              │
-│     • VESTA 磁性结构可视化（MCIF）                            │
-│     • 电子结构分析（vaspvis）                                 │
-│     • 磁性相图构建                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 🔧 关键技术要点
-
-### 1. 非共线磁性计算
-
-- **自动开启：** 设置 `LSORBIT = True` 后，VASP 自动启用非共线模式
-- **磁矩格式：** `MAGMOM = mx1 my1 mz1 mx2 my2 mz2 ...`
-- **对称性：** 通常需要 `ISYM = 0` 或 `ISYM = -1` 破坏对称性
-
-### 2. DFT+U 参数选择
-
-| 元素 | U (eV) | J (eV) | 参考 |
-|------|--------|--------|------|
-| Cr   | 3.0-4.0| 0.9    | 文献 |
-| V    | 4.0    | 0.9    | 经验 |
-| Mn   | 4.0    | 1.0    | 标准 |
-
-**参数调试：**
-- 先用文献值
-- 对比实验能隙/磁矩
-- 扫描 U 值优化
-
-详细说明见：[calculation/dftu_parameters.md](calculation/dftu_parameters.md)
-
-### 3. 收敛加速技巧
-
-**问题：** 磁性体系收敛慢
-
-**解决方案：**
-```bash
-ALGO = All            # 尝试更稳定算法
-BMIX = 5              # 增大混合参数
-AMIX = 0.2
-NELMDL = -10          # 跳过更多初始步骤
-MAXMIX = 80           # 增加混合历史
-```
-
-详细说明见：[calculation/convergence_tips.md](calculation/convergence_tips.md)
-
----
-
-## 📚 参考项目文件
-
-本工作流基于以下项目：
-
-```
-PdCrO2_Doping_Magnetic_calculation/
-├── magnetic_analysis/
-│   └── magmom.ipynb              # 磁矩计算脚本
-├── sqs_generation/
-│   └── icet.ipynb                # SQS 生成脚本
-└── dft_calculations/
-    ├── nodoping/scf_noncollinear/
-    │   └── INCAR                 # 非共线 SCF 设置
-    └── doping/PdCrO2_V30%_U_3/
-        └── scf/INCAR             # 掺杂体系设置
-```
-
----
-
-## 🎓 学习路径
-
-### 初学者
-1. 阅读 [model/magnetic_structure.md](model/magnetic_structure.md) 理解磁性模型
-2. 学习基本的 INCAR 参数设置
-3. 运行简单的铁磁/反铁磁计算
-
-### 进阶
-1. 掌握非共线磁性计算
-2. 学习 DFT+U 参数调优
-3. 使用 SQS 方法研究掺杂体系
-
-### 专家
-1. 复杂磁性结构建模（18 子晶格）
-2. 磁性相图构建
-3. 高通量磁性材料筛选
-
----
-
-## 🛠️ 实用脚本
-
-### 快速提取磁矩
-
-```bash
-#!/bin/bash
-# extract_magmom.sh
-
-echo "Total magnetization:"
-grep "number of electron" OUTCAR | tail -1
-
-echo -e "\nPer-atom magnetization:"
-python << EOF
-from pymatgen.io.vasp import Outcar
-import numpy as np
-
-out = Outcar("OUTCAR")
-for i, mag in enumerate(out.magnetization):
-    mag_size = np.linalg.norm(mag)
-    if mag_size > 0.1:  # 只显示磁性原子
-        print(f"Atom {i:3d}: |M| = {mag_size:6.3f} μB, "
-              f"({mag[0]:7.3f}, {mag[1]:7.3f}, {mag[2]:7.3f})")
-EOF
-```
-
-### 批量检查收敛
-
-```bash
-#!/bin/bash
-# check_convergence.sh
-
-for dir in calc_*/; do
-    echo "=== $dir ==="
-    cd "$dir"
-    tail -1 OSZICAR | awk '{print "Energy: " $3 " eV"}'
-    grep "magnetization (x)" OSZICAR | tail -1
-    cd ..
-done
-```
-
----
-
-## 📖 扩展阅读
-
-- [VASP Wiki: Non-collinear Calculations](https://www.vasp.at/wiki/index.php/Non-collinear_calculations)
-- [VASP Wiki: DFT+U](https://www.vasp.at/wiki/index.php/LDAU)
-- Takatsu et al., Phys. Rev. B 89, 104408 (2014)
-- ICET Documentation: https://icet.materialsmodeling.org/
-
----
-
-## 💡 提示与最佳实践
-
-1. **始终备份初始结构和 INCAR**
-2. **记录所有参数选择的理由**
-3. **对比文献中的实验数据验证**
-4. **多次独立计算确认结果可靠性**
-5. **使用版本控制（Git）管理计算**
-
----
-
-## 🙏 致谢
-
-本工作流基于 PdCrO2 钒掺杂磁性计算项目总结而成。感谢 Takatsu et al. 提供的实验磁性结构数据。
+**Last updated:** 2025-01-30
+**VASP version:** 6.x
+**Tested on:** SLURM-based HPC clusters
