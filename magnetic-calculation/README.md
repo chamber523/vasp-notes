@@ -1,26 +1,27 @@
-# Magnetic Systems Workflow
+# Magnetic Calculation
 
 Non-collinear magnetic calculations with SOC for PdCrO₂-based systems.
 
-## Directory Structure
+## Example: PdCrO2 Non-collinear Magnetism
 
 ```
-magnetic-systems/
-├── model/                        # Structure preparation
-│   ├── shift_z.py                 # Reorient cell (Cr to bottom)
-│   ├── make_supercell.py          # Generate supercell with transformation matrix
-│   ├── generate_magmom.py         # Calculate magnetic moments (Takatsu model)
-│   ├── generate_mcif.py           # VESTA visualization
-│   ├── 01_POSCAR_unitcell
-│   ├── 02_POSCAR_Cr-bottom
-│   ├── 03_POSCAR_supercell_6x
-│   ├── MAGMOM.txt
-│   └── magnetic_structure.mcif
-│
-└── calculation/                  # DFT calculations
-    ├── scf_noncollinear/          # Self-consistent field
-    ├── dos_nonllinear/            # Density of states
-    └── band_unfold/               # Band structure + unfolding
+magnetic-calculation/
+└── example-PdCrO2/
+    ├── model/                        # Structure preparation
+    │   ├── shift_z.py                 # Reorient cell (Cr to bottom)
+    │   ├── make_supercell.py          # Generate supercell
+    │   ├── generate_magmom.py         # Calculate magnetic moments (Takatsu model)
+    │   ├── generate_mcif.py           # VESTA visualization
+    │   ├── 01_POSCAR_unitcell
+    │   ├── 02_POSCAR_Cr-bottom
+    │   ├── 03_POSCAR_supercell_6x
+    │   ├── MAGMOM.txt
+    │   └── magnetic_structure.mcif
+    │
+    └── calculation/                  # DFT calculations
+        ├── scf_noncollinear/          # Self-consistent field
+        ├── dos_nonllinear/            # Density of states
+        └── band_unfold/               # Band structure + unfolding
 ```
 
 ## Workflow
@@ -28,7 +29,7 @@ magnetic-systems/
 ### 1. Structure Preparation
 
 ```bash
-cd model/
+cd example-PdCrO2/model/
 
 # Reorient to Cr-bottom
 python shift_z.py 01_POSCAR_unitcell 02_POSCAR_Cr-bottom
@@ -47,7 +48,7 @@ python generate_mcif.py 03_POSCAR_supercell_6x
 
 ```bash
 # SCF
-cd calculation/scf_noncollinear/
+cd ../calculation/scf_noncollinear/
 sbatch submit_vasp6.4.3_cpu.slurm
 
 # DOS (after SCF converges)
