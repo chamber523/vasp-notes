@@ -18,27 +18,19 @@ interface-systems/
 
 ## Key Concepts
 
-### Work Function (功函数)
+### Work Function
 
 Energy required to move an electron from inside the solid to vacuum (analogous to photoelectric effect).
 
 **Work function = Vacuum level - Fermi level**
 
-### Vacuum Level (真空能级)
+### Vacuum Level
 
 Energy of a free electron in vacuum far from the surface.
 
-### Dipole Correction (偶极校正)
+### Dipole Correction
 
-**Problem:** For asymmetric slabs (e.g., different surfaces on two sides), the potential in vacuum becomes a **slope** instead of a flat plateau.
-
-**Solution:** Dipole correction adds a step function to make the vacuum potential flat on both sides:
-```
-Without correction:    With correction:
-    /                      ___
-   /  (slope)             |   | (step)
-  /                       |___|
-```
+For asymmetric slabs (different terminations on two sides), the potential in vacuum becomes a slope instead of a flat plateau. Dipole correction adds a step function to make the vacuum potential flat on both sides, allowing proper definition of vacuum level.
 
 INCAR parameters:
 ```bash
@@ -46,6 +38,15 @@ LDIPOL = True           # Enable dipole correction
 IDIPOL = 3              # Direction (3 = z-axis for slab)
 DIPOL = x y z           # Dipole center (typically center of mass)
 ```
+
+### Macroscopic Averaged Potential
+
+Besides planar averaged potential, VASPKIT can calculate macroscopic-averaged potential, which is obtained by converging the planar averaged potential with a moving average.
+
+- **Planar average**: For z-direction, z = average(x, y) for every z
+- **Macroscopic average**: For z-direction, z = average(x, y, z ± Δz') for every z, where 2Δz' is the layer distance for repeat structures
+
+The macroscopic averaging removes atomic-scale oscillations to produce a smooth potential curve suitable for identifying plateaus and calculating work functions.
 
 ## Workflow
 
@@ -116,19 +117,6 @@ vaspkit
 - `PLANAR_AVERAGE.dat`: Raw planar averaged potential
 - `MACROSCOPIC_AVERAGE_<period>.dat`: Smoothed macroscopic average
 
-**What is macroscopic averaging?**
-
-Removes atomic-scale oscillations in potential:
-```
-Planar average:      Macroscopic average:
-  /\/\/\               _____
- /      \/\           /     \___
-         \/\         /          \___
-(atomic oscillation)    (smooth curve)
-```
-
-Formula: For each z, average over z ± Δz' where 2Δz' ≈ layer distance
-
 ### 4. Analysis
 
 Open `SBH.ipynb` to:
@@ -138,24 +126,13 @@ Open `SBH.ipynb` to:
 4. Calculate work function differences
 5. Determine Schottky barrier height
 
-**Typical plot:**
-```
-Potential (eV)
-   |     Metal    |  Semiconductor  |  Metal
-   |    ______    |     _______     |  ______
-   |   /      \___|____/       \____|_/
-   |
-   +-----------------------------------------> z (Å)
-        Barrier   Interface   Barrier
-```
-
 ## Important Notes
 
 ### Why Dipole Correction?
 
 For **asymmetric** slabs (different terminations on two sides):
-- Without correction: vacuum potential slopes → cannot define vacuum level
-- With correction: vacuum potential is flat on both sides → well-defined vacuum level
+- Without correction: vacuum potential slopes, cannot define vacuum level
+- With correction: vacuum potential is flat on both sides, well-defined vacuum level
 
 For **symmetric** slabs: dipole correction may not be necessary but doesn't hurt.
 
@@ -165,7 +142,7 @@ For **symmetric** slabs: dipole correction may not be necessary but doesn't hurt
 - Recommended: 20+ Å
 - Check: Potential should plateau in vacuum region (flat line)
 
-If potential doesn't plateau → increase vacuum layer.
+If potential doesn't plateau, increase vacuum layer.
 
 ### K-point Convergence
 
@@ -182,5 +159,4 @@ Gamma
 
 ## References
 
-- Van de Walle & Martin, PRB 35, 8154 (1987): Macroscopic averaging method
-- VASPKIT manual: Tool 427 for potential averaging
+- https://vaspkit.com/tutorials.html
