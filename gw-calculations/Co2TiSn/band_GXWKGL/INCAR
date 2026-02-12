@@ -1,0 +1,39 @@
+# general 
+ALGO = All        # Damped velocity friction algorithm
+PREC = Normal        # Normal precision
+EDIFF = 1e-8    # Convergence criteria for electronic converge
+NELM = 500      # Max number of electronic steps
+ENCUT = 400     # Cut off energy
+LASPH = True    # Include non-spherical contributions from gradient corrections
+BMIX = 3        # Mixing parameter for convergence
+AMIN = 0.01     # Mixing parameter for convergence 
+SIGMA = 0.05    # Width of smearing in eV
+LMAXMIX = 4
+
+# parallelization
+KPAR = 8        # The number of k-points to be treated in parallel
+NPAR = 8
+NCORE = 1
+
+# dos 
+ISTART = 0
+ICHARG = 2      # Calculate eigenvalues from preconverged CHGCAR
+ISMEAR = 0     # Tetrahedron method with Blochl corrections
+LCHARG = False  # Does not write the CHG* files
+LWAVE = False   # Does not write the WAVECAR files 
+LORBIT = 11     # Projected data (lm-decomposed PROCAR)
+
+# soc 
+LSORBIT = True  # Turn on spin-orbit coupling
+MAGMOM = 0 0 3 0 0 3 0 0 3 3*0 # Set the magnetic moment for each atom (3 for each atom)
+GGA_COMPAT= .FALSE.
+
+# sp 
+ISPIN = 1       # Spin-polarized calculation
+
+# hse 
+LHFCALC = True  # Determines if a hybrid functional is used
+HFSCREEN = 0.2  # Range-separation parameter
+AEXX = 0.25     # Fraction of exact exchange to be used
+PRECFOCK = Normal # Increases the speed of HSE Calculations
+TIME   =  0.4         (Timestep for IALGO5X)
