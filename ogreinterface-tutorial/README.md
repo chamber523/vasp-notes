@@ -204,33 +204,9 @@ ogreinterface-tutorial/
 
 ---
 
-## FAQ
-
-**Q: Why was OgreWulff removed?**
-A: OgreWulff is unavailable on PyPI/GitHub. It's only used for optional Wulff shape plotting and doesn't affect core functionality.
-
-**Q: How to select the best hkl combination?**
-A: Choose the smallest and bluest circle in the lattice matching plot - this represents minimal strain and area.
-
-**Q: Recommended PSO particle number?**
-- Quick test: 10-20
-- Standard: 30 (default)
-- High accuracy: 50-100 (slower)
-
-**Q: When to use MLIP?**
-A: When you need accurate energy calculations but DFT is too expensive. Use CHGNet or MACE for relaxation.
-
----
-
 ## References
 
-### Paper
 Toso et al. (2025) - "Structure Prediction of Ionic Epitaxial Interfaces with Ogre Demonstrated for Colloidal Heterostructures"
-
-### Links
-- [OgreInterface GitHub](https://github.com/caizefeng/OgreInterface)
-- [CHGNet](https://github.com/CederGroupHub/chgnet)
-- [MACE](https://github.com/ACEsuit/mace)
 
 ---
 
