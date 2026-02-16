@@ -274,6 +274,17 @@ Modify `~/.local/share/jupyter/kernels/ogre_py311/kernel.json` to use **absolute
 - Ensure Unix line endings (LF) not Windows (CRLF)
 - Helper script must have executable permissions
 
+### Kernel Directory Structure
+
+```
+~/.local/share/jupyter/kernels/ogre_py311/
+├── kernel.json          # Kernel configuration file
+├── kernel-helper.sh     # Helper startup script (executable)
+├── logo-32x32.png       # Small icon
+├── logo-64x64.png       # Medium icon
+└── logo-svg.svg         # Vector icon
+```
+
 ### Troubleshooting
 
 **Kernel fails to start:**
