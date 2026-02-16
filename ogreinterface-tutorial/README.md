@@ -215,6 +215,77 @@ Derek Dardzinski (original author) | Zefeng Cai (maintainer)
 
 ---
 
-**P.S.** For using the Conda ogre environment as a NERSC Jupyter kernel, refer to: https://docs.nersc.gov/services/jupyter/how-to-guides/
+## P.S. Using Conda ogre Environment as NERSC Jupyter Kernel
 
-**Last updated:** 2026-02-16
+### Create Jupyter Kernel
+
+```bash
+conda activate ogre_py311
+python -m ipykernel install --user --name ogre_py311 --display-name "ogre_py311"
+```
+
+### Create Kernel Helper Script
+
+```bash
+cat > ~/.local/share/jupyter/kernels/ogre_py311/kernel-helper.sh << 'EOF'
+#!/bin/bash
+# Load Python module (NERSC specific)
+module load python
+
+# Activate conda environment
+conda activate ogre_py311
+
+# Execute the kernel
+exec "$@"
+EOF
+
+# Set executable permissions
+chmod u+x ~/.local/share/jupyter/kernels/ogre_py311/kernel-helper.sh
+
+# Fix line endings
+sed -i 's/\r$//' ~/.local/share/jupyter/kernels/ogre_py311/kernel-helper.sh
+```
+
+### Update kernel.json
+
+Modify `~/.local/share/jupyter/kernels/ogre_py311/kernel.json` to use **absolute path**:
+
+```json
+{
+ "argv": [
+  "/global/u1/c/YOUR_USERNAME/.local/share/jupyter/kernels/ogre_py311/kernel-helper.sh",
+  "python",
+  "-Xfrozen_modules=off",
+  "-m",
+  "ipykernel_launcher",
+  "-f",
+  "{connection_file}"
+ ],
+ "display_name": "ogre_py311",
+ "language": "python",
+ "metadata": {
+  "debugger": true
+ }
+}
+```
+
+**Important**:
+- Use **absolute path** (not `{resource_dir}`) to ensure NERSC JupyterHub can find the script
+- Ensure Unix line endings (LF) not Windows (CRLF)
+- Helper script must have executable permissions
+
+### Troubleshooting
+
+**Kernel fails to start:**
+```bash
+# Check permissions
+ls -l ~/.local/share/jupyter/kernels/ogre_py311/kernel-helper.sh
+
+# Fix line endings
+sed -i 's/\r$//' ~/.local/share/jupyter/kernels/ogre_py311/kernel-helper.sh
+
+# Test helper script
+~/.local/share/jupyter/kernels/ogre_py311/kernel-helper.sh python --version
+```
+
+For detailed instructions, see: https://docs.nersc.gov/services/jupyter/how-to-guides/
