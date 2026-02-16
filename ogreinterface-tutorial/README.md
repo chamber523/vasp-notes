@@ -224,38 +224,14 @@ conda activate ogre_py311
 python -m ipykernel install --user --name ogre_py311 --display-name "ogre_py311"
 ```
 
-### Create Kernel Helper Script
-
-```bash
-cat > ~/.local/share/jupyter/kernels/ogre_py311/kernel-helper.sh << 'EOF'
-#!/bin/bash
-# Load Python module (NERSC specific)
-module load python
-
-# Activate conda environment
-conda activate ogre_py311
-
-# Execute the kernel
-exec "$@"
-EOF
-
-# Set executable permissions
-chmod u+x ~/.local/share/jupyter/kernels/ogre_py311/kernel-helper.sh
-
-# Fix line endings
-sed -i 's/\r$//' ~/.local/share/jupyter/kernels/ogre_py311/kernel-helper.sh
-```
-
 ### Update kernel.json
 
-Modify `~/.local/share/jupyter/kernels/ogre_py311/kernel.json` to use **absolute path**:
+Modify `~/.local/share/jupyter/kernels/ogre_py311/kernel.json`:
 
 ```json
 {
  "argv": [
-  "/global/u1/c/YOUR_USERNAME/.local/share/jupyter/kernels/ogre_py311/kernel-helper.sh",
-  "python",
-  "-Xfrozen_modules=off",
+  "/global/cfs/cdirs/m3578/YOUR_USERNAME/.conda/envs/ogre_py311/bin/python",
   "-m",
   "ipykernel_launcher",
   "-f",
@@ -269,10 +245,23 @@ Modify `~/.local/share/jupyter/kernels/ogre_py311/kernel.json` to use **absolute
 }
 ```
 
+### Create Kernel Helper Script (Optional)
+
+```bash
+cat > ~/.local/share/jupyter/kernels/ogre_py311/kernel-helper.sh << 'EOF'
+#!/bin/bash
+module load python
+conda activate ogre_py311
+exec "$@"
+EOF
+
+chmod u+x ~/.local/share/jupyter/kernels/ogre_py311/kernel-helper.sh
+```
+
 **Important**:
-- Use **absolute path** (not `{resource_dir}`) to ensure NERSC JupyterHub can find the script
-- Ensure Unix line endings (LF) not Windows (CRLF)
-- Helper script must have executable permissions
+- Use **absolute path** to your conda environment's Python interpreter
+- Replace `YOUR_USERNAME` with your actual username
+- Replace `/global/cfs/cdirs/m3578/` with your actual conda path
 
 ### Kernel Directory Structure
 
@@ -289,14 +278,17 @@ Modify `~/.local/share/jupyter/kernels/ogre_py311/kernel.json` to use **absolute
 
 **Kernel fails to start:**
 ```bash
-# Check permissions
-ls -l ~/.local/share/jupyter/kernels/ogre_py311/kernel-helper.sh
+# Verify conda environment path
+conda env list | grep ogre_py311
 
-# Fix line endings
-sed -i 's/\r$//' ~/.local/share/jupyter/kernels/ogre_py311/kernel-helper.sh
+# Check Python interpreter
+/global/cfs/cdirs/m3578/YOUR_USERNAME/.conda/envs/ogre_py311/bin/python --version
 
-# Test helper script
-~/.local/share/jupyter/kernels/ogre_py311/kernel-helper.sh python --version
+# List all kernels
+jupyter kernelspec list
+
+# View kernel configuration
+cat ~/.local/share/jupyter/kernels/ogre_py311/kernel.json
 ```
 
 For detailed instructions, see: https://docs.nersc.gov/services/jupyter/how-to-guides/
