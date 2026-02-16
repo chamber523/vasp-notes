@@ -213,4 +213,8 @@ Toso et al. (2025) - "Structure Prediction of Ionic Epitaxial Interfaces with Og
 **Credits:**
 Derek Dardzinski (original author) | Zefeng Cai (maintainer)
 
+---
+
+**P.S.** For using the Conda ogre environment as a NERSC Jupyter kernel, refer to: https://docs.nersc.gov/services/jupyter/how-to-guides/
+
 **Last updated:** 2026-02-16
