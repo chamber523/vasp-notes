@@ -152,19 +152,6 @@ MAGMOM = 36*0 \        # O: non-magnetic (3 components × 12 atoms)
     18*0               # Pd: non-magnetic (3 components × 6 atoms)
 ```
 
-### DFT+U
-
-```bash
-LDAU = True
-LDAUTYPE = 2
-LDAUU = 0 4 0          # U = 4.0 eV for Cr
-```
-
-### Band Unfolding
-
-- Transformation matrix: `[[2,1,0],[1,2,0],[0,0,2]]`
-- Visualization: vaspvis
-- Requirement: `LWAVE = True` in band_unfold/INCAR
 
 ## References
 
