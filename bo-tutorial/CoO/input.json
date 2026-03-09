@@ -1,0 +1,143 @@
+{
+    "vasp_env": {
+        "vasp_run_command": "srun -n 64 -c 16 --cpu-bind=cores vasp_ncl",
+        "out_file_name": "slurm-vasp.out",
+        "vasp_pp_path": "/global/homes/c/chenbo/Pseudopotentials/",
+        "dry_run": false,
+        "dftu_only": true,
+        "get_optimal_band": true
+    },
+    "bo": {
+        "resume_checkpoint": false,
+        "baseline": "hse",
+        "which_u": [
+            1,
+	    0
+        ],
+        "br": [
+            8,
+            4
+        ],
+        "kappa": 5,
+        "alpha_gap": 0.0,
+        "alpha_band": 0.5,
+        "alpha_mag": 0.5,
+        "mag_axis": "all",
+        "threshold": 0.0001,
+        "urange": [
+            -10.0,
+            10.0
+        ],
+        "elements": [
+            "Co"
+        ],
+        "iteration": 200,
+        "report_optimum_interval": 10,
+        "threshold_opt_u": 0.0,
+        "print_magmom": true
+    },
+    "structure_info": {
+        "lattice_param": 4.2571,
+        "cell": [
+            [
+                0.0,
+                0.5,
+                0.5
+            ],
+            [
+                0.5,
+                0.0,
+                0.5
+            ],
+            [
+                0.5,
+                0.5,
+                0.0
+            ]
+        ],
+        "atoms": [
+            [
+                "Co",
+                [
+                    0,
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    0,
+                    0.5
+                ]
+            ],
+            [
+                "O",
+                [
+                    0.5,
+                    0.5,
+                    0.5
+                ],
+                [
+                    0,
+                    0,
+                    1e-06
+                ]
+            ]
+        ],
+        "kgrid_hse": [
+            10,
+            10,
+            10
+        ],
+        "kgrid_pbe": [
+            10,
+            10,
+            10
+        ],
+        "num_kpts": 50,
+        "kpath": "G X W L G K",
+        "custom_kpoints": null,
+        "custom_POTCAR_path": null
+    },
+    "general_flags": {
+        "encut": 400,
+        "ismear": 0,
+        "sigma": 0.02,
+        "prec": "N",
+        "algo": "All",
+        "kpar": 16,
+        "ncore": 1,
+        "npar": 4,
+        "lorbit": 11,
+        "lmaxmix": 4,
+        "lsorbit": true
+    },
+    "scf": {
+        "icharg": 2,
+        "istart": 0,
+        "xc": "pbe"
+    },
+    "band": {
+        "icharg": 11,
+        "lcharg": false,
+        "lwave": false
+    },
+    "pbe": {
+        "xc": "pbe",
+        "ldau": true,
+        "ldau_luj": {
+            "Co": {
+                "L": 2,
+                "U": 0.0,
+                "J": 0.0
+            }
+        }
+    },
+    "hse": {
+        "istart": 0,
+        "icharg": 2,
+        "xc": "hse06",
+        "aexx": 0.25,
+        "time": 0.4,
+        "ldiag": true
+    }
+}
