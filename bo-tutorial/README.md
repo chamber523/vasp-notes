@@ -1,5 +1,7 @@
 # BayesianOpt4dftu Tutorial
 
+> Based on https://github.com/caizefeng/BayesianOpt4dftu
+
 A tutorial for automatically determining Hubbard U parameters in DFT+U using Bayesian Optimization (BO).
 
 ---
