@@ -26,6 +26,7 @@ INCAR tags are organized by calculation type into the following sections:
 | [Band](#band) | Band structure calculation |
 | [SOC](#soc) | Spin-orbit coupling calculation |
 | [HSE](#hse) | HSE hybrid functional calculation |
+| [DFT+U](#dftu) | Hubbard U correction for strongly correlated d/f electrons |
 
 ---
 
@@ -34,16 +35,16 @@ INCAR tags are organized by calculation type into the following sections:
 Universal parameters applicable to all calculation types.
 
 ```
-ALGO = Fast     # Mixture of Davidson and RMM-DIIS algos
-PREC = N        # Normal precision
-EDIFF = 1e-5    # Convergence criteria for electronic convergence
-NELM = 500      # Max number of electronic steps
-ENCUT = 400     # Plane-wave cutoff energy (eV)
-LASPH = True    # Include non-spherical contributions from gradient corrections
-NBANDS = 12     # Number of bands to include in the calculation
-BMIX = 3        # Mixing parameter for convergence
-AMIN = 0.01     # Minimum mixing parameter for convergence
-SIGMA = 0.05    # Width of smearing (eV)
+ALGO = Fast         # Mixture of Davidson and RMM-DIIS algos
+PREC = N            # Normal precision
+EDIFF = 1e-5        # Convergence criteria for electronic convergence
+NELM = 500          # Max number of electronic steps
+ENCUT = 400         # Plane-wave cutoff energy (eV)
+LASPH = True        # Include non-spherical contributions from gradient corrections
+GGA_COMPAT = .FALSE.  # Restore full rotational invariance of GGA
+BMIX = 3            # Mixing parameter for convergence
+AMIN = 0.01         # Minimum mixing parameter for convergence
+SIGMA = 0.05        # Width of smearing (eV)
 ```
 
 ### Tag Reference
@@ -55,6 +56,8 @@ SIGMA = 0.05    # Width of smearing (eV)
 | `EDIFF` | `1e-5` ~ `1e-6` | Use `1e-5` for relaxations, `1e-6` for high-accuracy calculations |
 | `ENCUT` | 400–600 | Must be kept consistent across all calculations for valid energy comparisons |
 | `LASPH` | `True` | Important for systems with d or f electrons |
+| `GGA_COMPAT` | `.FALSE.` | Disables GGA compatibility mode to restore full rotational invariance; recommended when using PAW potentials |
+| `NBANDS` | VASP default | The VASP default is sufficient in most cases. When SOC (`LSORBIT = True`) or non-collinear magnetism (`LNONCOLLINEAR = True`) is enabled, VASP automatically doubles the default NBANDS |
 | `SIGMA` | 0.05–0.2 | Use larger values for metals; smaller values for insulators/semiconductors |
 
 ---
@@ -216,6 +219,36 @@ PRECFOCK = Fast   # Increases the speed of HSE calculations
 | `ALGO` | `All` / `Damped` | `All` is recommended for HSE to avoid convergence issues |
 
 > **Note**: HSE is far more expensive than GGA. It is best practice to first complete a GGA structural relaxation, then run HSE as a single-point calculation on the relaxed structure.
+
+---
+
+## DFT+U
+
+DFT+U (LDA+U / GGA+U) adds a Hubbard U correction to treat strong on-site Coulomb interactions in localized d or f orbitals, where standard GGA underestimates correlation effects.
+
+```
+LDAU = True       # Enable DFT+U
+LDAUTYPE = 2      # Dudarev formulation (only U_eff = U - J matters)
+LDAUL = 2 -1      # Angular quantum number for each species (2=d, 3=f, -1=no correction)
+LDAUU = 4.0 0.0   # U value (eV) for each species
+LDAUJ = 0.0 0.0   # J value (eV) for each species (set to 0 with Dudarev)
+LDAUPRINT = 1     # Print occupancy matrix to OUTCAR
+LMAXMIX = 4       # Max l-quantum number for charge density mixing (4 for d, 6 for f)
+```
+
+### Tag Reference
+
+| Tag | Common Values | Description |
+|-----|---------------|-------------|
+| `LDAU` | `True` | Activates the DFT+U correction |
+| `LDAUTYPE` | `1` / `2` | `1` = Liechtenstein (separate U and J); `2` = Dudarev (only U−J effective) — type 2 is most common |
+| `LDAUL` | `2` / `3` / `-1` | Orbital channel to apply U: `2` = d electrons, `3` = f electrons, `-1` = no correction; one value per species |
+| `LDAUU` | system-dependent | Hubbard U parameter (eV) per species; typical range 2–8 eV for transition metals |
+| `LDAUJ` | `0.0` | Exchange J parameter (eV); set to `0` when using Dudarev (type 2) |
+| `LDAUPRINT` | `0` / `1` / `2` | `1` writes occupancy matrix to OUTCAR; useful for verifying orbital occupations |
+| `LMAXMIX` | `4` / `6` | Controls charge density mixing for higher angular momenta; use `4` for d-electron systems, `6` for f-electron systems |
+
+> **Note**: U values are system- and pseudopotential-dependent. Always validate against experimental data (band gap, magnetic moment, lattice parameter). The effective parameter is U_eff = U − J when using `LDAUTYPE = 2`.
 
 ---
 
