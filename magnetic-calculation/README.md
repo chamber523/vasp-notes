@@ -95,7 +95,7 @@ LSORBIT       = .FALSE.
 
 - Spin can point in any direction; magnetic moment is a 3D vector **m** = (m_x, m_y, m_z)
 - `MAGMOM` requires 3 components per atom (e.g., `MAGMOM = 0 0 3`)
-- `ISPIN` is ignored — do not set `ISPIN = 2` alongside `LNONCOLLINEAR = .TRUE.` (will cause an error in VASP ≥ 6.5)
+- `ISPIN` is ignored — spin is no longer a simple ↑/↓ flag but a full 3D vector, so `ISPIN` becomes meaningless. Do not set `ISPIN = 2` alongside `LNONCOLLINEAR = .TRUE.` (will cause an error in VASP ≥ 6.5)
 - Computational cost: ~2× collinear
 - Use for: spin spirals, skyrmions, frustrated magnetism, canted antiferromagnets
 
