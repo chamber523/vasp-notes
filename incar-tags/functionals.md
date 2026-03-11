@@ -143,6 +143,12 @@ LASPH      = .TRUE.
 
 Meta-GGA r²SCAN combined with rVV10 nonlocal correlation. Currently one of the most accurate general-purpose functional + vdW combinations in VASP. **Replaces TS** in the example below.
 
+> **POTCAR requirement**: Meta-GGA functionals require POTCAR files that contain kinetic energy-density information. Verify before running:
+> ```bash
+> grep kinetic POTCAR
+> ```
+> The output must include `kinetic energy-density` and `mkinetic energy-density pseudized`. Almost all recent PAW potentials satisfy this, but older ones (e.g., `O_GW`) may not.
+
 ```
 METAGGA    = R2SCAN    # Use r²SCAN meta-GGA functional
 LUSE_VDW   = .TRUE.   # Enable nonlocal vdW correlation (rVV10)
