@@ -149,6 +149,12 @@ Meta-GGA r²SCAN combined with rVV10 nonlocal correlation. Currently one of the 
 > ```
 > The output must include `kinetic energy-density` and `mkinetic energy-density pseudized`. Almost all recent PAW potentials satisfy this, but older ones (e.g., `O_GW`) may not.
 
+> **Expected VASP warning**: Running r²SCAN with standard PBE POTCARs will trigger:
+> ```
+> You enforced a specific xc type in the INCAR file but a different type was found in the POTCAR file.
+> ```
+> This is expected and harmless. There are no dedicated r²SCAN POTCARs — PBE POTCARs are the correct choice for Meta-GGA calculations. The xc type embedded in the POTCAR only affects the reference atomic calculation used to generate the PAW data, not the functional used in your actual run.
+
 ```
 METAGGA    = R2SCAN    # Use r²SCAN meta-GGA functional
 LUSE_VDW   = .TRUE.   # Enable nonlocal vdW correlation (rVV10)
